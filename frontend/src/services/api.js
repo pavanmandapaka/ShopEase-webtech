@@ -24,11 +24,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Redirect to login if not already there
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      // Only treat as a session expiry if the request was NOT a user-initiated
+      // action (like checkout/payment). We signal via a custom event so that
+      // AuthContext can react, instead of force-redirecting here and blowing
+      // away React state mid-flow.
+      const url = error.config?.url || '';
+      const isPaymentRoute = url.includes('/payment');
+
+      if (!isPaymentRoute) {
+        // Dispatch a custom event; AuthContext listens and handles logout/redirect.
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }
     }
     return Promise.reject(error);

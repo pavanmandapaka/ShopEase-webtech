@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services';
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,9 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const navigate = useNavigate();
+  // Prevent multiple simultaneous logout redirects
+  const loggingOut = useRef(false);
 
   // Verify token on mount
   useEffect(() => {
@@ -37,6 +41,25 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  // Listen for 401 events fired by the api interceptor (for non-payment routes).
+  // This replaces the old window.location.href redirect in api.js, giving React
+  // Router control over navigation so no full-page reload occurs mid-checkout.
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      if (loggingOut.current) return;
+      loggingOut.current = true;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsAuthenticated(false);
+      toast.error('Your session has expired. Please log in again.');
+      navigate('/login', { replace: true });
+      setTimeout(() => { loggingOut.current = false; }, 2000);
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [navigate]);
 
   const login = useCallback(async (email, password) => {
     const { data } = await authService.login({ email, password });
