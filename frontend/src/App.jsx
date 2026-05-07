@@ -17,7 +17,7 @@ import SellerDashboard from './pages/SellerDashboard';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children, requireSeller = false }) => {
-  const { isAuthenticated, isSeller, loading } = useAuth();
+  const { isAuthenticated, isSellerMode, loading } = useAuth();
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, requireSeller = false }) => {
     );
   }
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (requireSeller && !isSeller) return <Navigate to="/" replace />;
+  if (requireSeller && !isSellerMode) return <Navigate to="/" replace />;
   return children;
 };
 

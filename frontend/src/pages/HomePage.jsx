@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   FiArrowRight, FiShield, FiTruck, FiRefreshCw, FiStar,
   FiZap, FiShoppingBag, FiAward, FiMonitor, FiBook,
-  FiHome, FiActivity, FiCpu, FiDroplet, FiTool, FiPackage
+  FiHome, FiActivity, FiCpu, FiDroplet, FiTool, FiPackage, FiBarChart2
 } from 'react-icons/fi';
-import { productService } from '../services';
+import { useAuth } from '../context/AuthContext';
+import { productService, orderService } from '../services';
 import ProductCard from '../components/product/ProductCard';
 import './HomePage.css';
 
@@ -28,12 +29,14 @@ const FEATURES = [
 ];
 
 const HomePage = () => {
+  const { isSellerMode, user, switchRole } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchBuyerData = async () => {
       try {
         const [featured, newest] = await Promise.all([
           productService.getProducts({ featured: 'true', limit: 4 }),
@@ -47,8 +50,119 @@ const HomePage = () => {
         setLoading(false);
       }
     };
-    fetchProducts();
-  }, []);
+
+    const fetchSellerData = async () => {
+      try {
+        const { data } = await orderService.getSellerStats();
+        setStats(data.stats);
+      } catch (error) {
+        console.error('Failed to fetch seller stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isSellerMode) {
+      fetchSellerData();
+    } else {
+      fetchBuyerData();
+    }
+  }, [isSellerMode]);
+
+  if (isSellerMode) {
+    return (
+      <div className="home-page seller-home">
+        <section className="hero seller-hero">
+          <div className="hero-bg">
+            <div className="hero-orb hero-orb-1" />
+            <div className="hero-orb hero-orb-3" />
+            <div className="hero-grid-pattern" />
+          </div>
+          <div className="container hero-content">
+            <div className="hero-badge">
+              <FiAward size={14} /> Seller Mode Active
+            </div>
+            <h1 className="hero-title">
+              Your <span className="gradient-text">Business</span><br />
+              at a glance.
+            </h1>
+            <p className="hero-subtitle">
+              Manage your products, track orders, and grow your revenue from your personalized seller dashboard.
+            </p>
+            <div className="hero-actions">
+              <Link to="/seller/dashboard" className="btn btn-primary btn-lg">
+                <FiActivity /> Open Dashboard
+              </Link>
+              <button className="btn btn-secondary btn-lg" onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}>
+                View Quick Stats <FiArrowRight />
+              </button>
+            </div>
+            <div className="hero-stats">
+              <div className="stat">
+                <span className="stat-number">${stats?.totalRevenue?.toLocaleString() || '0'}</span>
+                <span className="stat-label">Revenue</span>
+              </div>
+              <div className="stat-divider" />
+              <div className="stat">
+                <span className="stat-number">{stats?.totalOrders || '0'}</span>
+                <span className="stat-label">Orders</span>
+              </div>
+              <div className="stat-divider" />
+              <div className="stat">
+                <span className="stat-number">{stats?.totalProducts || '0'}</span>
+                <span className="stat-label">Products</span>
+              </div>
+              <div className="stat-divider" />
+              <div className="stat">
+                <span className="stat-number">4.9</span>
+                <span className="stat-label"><FiStar size={12} /> Rating</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section seller-quick-actions">
+          <div className="container">
+            <div className="section-header">
+              <h2>Quick Actions</h2>
+              <p>Manage your selling activity efficiently</p>
+            </div>
+            <div className="features-grid">
+              <Link to="/seller/dashboard?tab=products" className="feature-card action-card">
+                <div className="feature-icon"><FiPackage size={24} /></div>
+                <h3>Add New Product</h3>
+                <p>List a new item in the marketplace</p>
+              </Link>
+              <Link to="/seller/dashboard?tab=orders" className="feature-card action-card">
+                <div className="feature-icon"><FiShoppingBag size={24} /></div>
+                <h3>Recent Orders</h3>
+                <p>Check and update order fulfillment</p>
+              </Link>
+              <Link to="/seller/dashboard?tab=overview" className="feature-card action-card">
+                <div className="feature-icon"><FiBarChart2 size={24} /></div>
+                <h3>Sales Reports</h3>
+                <p>Analyze your business performance</p>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="section bg-elevated">
+          <div className="container">
+            <div className="seller-cta" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="seller-cta-content">
+                <h2>New to Selling?</h2>
+                <p>Check out our seller guide to learn how to optimize your listings and reach more customers.</p>
+                <Link to="/seller/dashboard" className="btn btn-secondary">
+                  Go to Dashboard <FiArrowRight />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="home-page">
@@ -76,9 +190,9 @@ const HomePage = () => {
             <Link to="/products" className="btn btn-primary btn-lg" id="hero-shop-btn">
               <FiShoppingBag /> Shop Now
             </Link>
-            <Link to="/register?role=seller" className="btn btn-secondary btn-lg" id="hero-sell-btn">
+            <button className="btn btn-secondary btn-lg" onClick={() => switchRole('seller')}>
               Start Selling <FiArrowRight />
-            </Link>
+            </button>
           </div>
           <div className="hero-stats">
             <div className="stat">
@@ -228,9 +342,9 @@ const HomePage = () => {
                 <span>Real-time analytics</span>
                 <span>Secure payouts</span>
               </div>
-              <Link to="/register?role=seller" className="btn btn-primary btn-lg" id="become-seller-btn">
+              <button className="btn btn-primary btn-lg" id="become-seller-btn" onClick={() => switchRole('seller')}>
                 Become a Seller <FiArrowRight />
-              </Link>
+              </button>
             </div>
             <div className="seller-cta-visual">
               <div className="dashboard-preview">

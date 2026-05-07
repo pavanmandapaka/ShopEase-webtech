@@ -10,7 +10,7 @@ import {
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout, isSeller } = useAuth();
+  const { user, isAuthenticated, logout, activeRole, switchRole, isSellerMode } = useAuth();
   const { cartCount, setIsOpen } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,6 +43,10 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const handleToggleMode = () => {
+    switchRole(activeRole === 'user' ? 'seller' : 'user');
+  };
+
   return (
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="navbar-container">
@@ -53,47 +57,74 @@ const Navbar = () => {
         </Link>
 
         {/* Search (Desktop) */}
-        <form className="navbar-search" onSubmit={handleSearch}>
-          <FiSearch className="search-icon" />
-          <input
-            type="search"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-            id="navbar-search-input"
-          />
-        </form>
+        {!isSellerMode && (
+          <form className="navbar-search" onSubmit={handleSearch}>
+            <FiSearch className="search-icon" />
+            <input
+              type="search"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+              id="navbar-search-input"
+            />
+          </form>
+        )}
 
         {/* Desktop Nav */}
         <div className="navbar-links">
-          <Link to="/products" className={`nav-link ${location.pathname === '/products' ? 'active' : ''}`}>
-            Products
-          </Link>
-          {isSeller && (
-            <Link
-              to="/seller/dashboard"
-              className={`nav-link ${location.pathname.startsWith('/seller') ? 'active' : ''}`}
-            >
-              Dashboard
-            </Link>
+          {!isSellerMode ? (
+            <>
+              <Link to="/products" className={`nav-link ${location.pathname === '/products' ? 'active' : ''}`}>
+                Products
+              </Link>
+              {isAuthenticated && (
+                <Link to="/orders" className={`nav-link ${location.pathname === '/orders' ? 'active' : ''}`}>
+                  Orders
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                to="/seller/dashboard"
+                className={`nav-link ${location.pathname.startsWith('/seller') ? 'active' : ''}`}
+              >
+                Dashboard
+              </Link>
+            </>
           )}
         </div>
+
+        {/* Role Toggle */}
+        {isAuthenticated && (
+          <button 
+            className="role-switch-pill" 
+            onClick={handleToggleMode}
+            title={`Switch to ${activeRole === 'user' ? 'Seller' : 'Buyer'} mode`}
+          >
+            <div className={`pill-slider ${activeRole}`} />
+            <span className={activeRole === 'user' ? 'active' : ''}>Buying</span>
+            <span className={activeRole === 'seller' ? 'active' : ''}>Selling</span>
+          </button>
+        )}
 
         {/* Actions */}
         <div className="navbar-actions">
           {/* Cart */}
-          <button
-            className="nav-icon-btn"
-            onClick={() => setIsOpen(true)}
-            aria-label="Open cart"
-            id="cart-btn"
-          >
-            <FiShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
-            )}
-          </button>
+          {!isSellerMode && (
+            <button
+              className="nav-icon-btn"
+              onClick={() => setIsOpen(true)}
+              aria-label="Open cart"
+              id="cart-btn"
+            >
+              <FiShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
+              )}
+            </button>
+          )}
 
           {/* Profile */}
           {isAuthenticated ? (
@@ -118,26 +149,35 @@ const Navbar = () => {
                   <div className="dropdown-header">
                     <strong>{user?.name}</strong>
                     <span>{user?.email}</span>
-                    <span className={`badge badge-${user?.role === 'seller' ? 'primary' : 'info'}`}>
-                      {user?.role}
+                    <span className={`badge badge-${isSellerMode ? 'primary' : 'info'}`}>
+                      {activeRole.toUpperCase()} MODE
                     </span>
                   </div>
                   <div className="dropdown-divider" />
-                  <Link to="/orders" className="dropdown-item" id="orders-menu-link">
-                    <FiPackage size={15} /> My Orders
-                  </Link>
-                  <Link to="/wishlist" className="dropdown-item" id="wishlist-menu-link">
-                    <FiHeart size={15} /> Wishlist
-                  </Link>
-                  <Link to="/profile" className="dropdown-item" id="profile-menu-link">
-                    <FiSettings size={15} /> Profile Settings
-                  </Link>
-                  {isSeller && (
+                  
+                  {!isSellerMode ? (
+                    <>
+                      <Link to="/orders" className="dropdown-item" id="orders-menu-link">
+                        <FiPackage size={15} /> My Orders
+                      </Link>
+                      <Link to="/wishlist" className="dropdown-item" id="wishlist-menu-link">
+                        <FiHeart size={15} /> Wishlist
+                      </Link>
+                    </>
+                  ) : (
                     <Link to="/seller/dashboard" className="dropdown-item" id="seller-dash-link">
                       <FiBarChart2 size={15} /> Seller Dashboard
                     </Link>
                   )}
+
+                  <Link to="/profile" className="dropdown-item" id="profile-menu-link">
+                    <FiSettings size={15} /> Profile Settings
+                  </Link>
+                  
                   <div className="dropdown-divider" />
+                  <button className="dropdown-item" onClick={handleToggleMode}>
+                    <FiSettings size={15} /> Switch to {activeRole === 'user' ? 'Seller' : 'Buyer'}
+                  </button>
                   <button className="dropdown-item danger" onClick={handleLogout} id="logout-btn">
                     <FiLogOut size={15} /> Logout
                   </button>
@@ -170,23 +210,47 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="mobile-menu glass">
-          <form className="mobile-search" onSubmit={handleSearch}>
-            <FiSearch />
-            <input
-              type="search"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              id="mobile-search-input"
-            />
-          </form>
-          <Link to="/products" className="mobile-link">Products</Link>
+          {isAuthenticated && (
+            <div className="mobile-role-switch">
+              <span>Current Mode</span>
+              <button 
+                className="role-switch-pill" 
+                style={{ display: 'flex', width: '100%' }}
+                onClick={handleToggleMode}
+              >
+                <div className={`pill-slider ${activeRole}`} />
+                <span className={activeRole === 'user' ? 'active' : ''}>Buying</span>
+                <span className={activeRole === 'seller' ? 'active' : ''}>Selling</span>
+              </button>
+            </div>
+          )}
+
+          {!isSellerMode && (
+            <form className="mobile-search" onSubmit={handleSearch}>
+              <FiSearch />
+              <input
+                type="search"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                id="mobile-search-input"
+              />
+            </form>
+          )}
+
+          {!isSellerMode ? (
+            <>
+              <Link to="/products" className="mobile-link">Products</Link>
+              {isAuthenticated && <Link to="/orders" className="mobile-link">My Orders</Link>}
+            </>
+          ) : (
+            <Link to="/seller/dashboard" className="mobile-link">Seller Dashboard</Link>
+          )}
+
           {isAuthenticated ? (
             <>
-              <Link to="/orders" className="mobile-link">My Orders</Link>
-              <Link to="/wishlist" className="mobile-link">Wishlist</Link>
+              {!isSellerMode && <Link to="/wishlist" className="mobile-link">Wishlist</Link>}
               <Link to="/profile" className="mobile-link">Profile</Link>
-              {isSeller && <Link to="/seller/dashboard" className="mobile-link">Seller Dashboard</Link>}
               <button className="mobile-link danger" onClick={handleLogout}>Logout</button>
             </>
           ) : (

@@ -396,6 +396,36 @@
 .preview-stat strong { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
 .preview-stat small { font-size: 0.8125rem; color: var(--text-muted); }
 
+/* Seller Home Specific */
+.seller-home .hero {
+  min-height: 80vh;
+  padding-bottom: 40px;
+}
+
+.seller-hero .hero-orb-1 { background: var(--primary); }
+.seller-hero .hero-orb-3 { background: var(--accent); }
+
+.action-card {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(108, 99, 255, 0.1);
+}
+
+.action-card .feature-icon {
+  transition: transform 0.3s;
+}
+
+.action-card:hover .feature-icon {
+  transform: rotate(10deg) scale(1.1);
+}
+
 @media (max-width: 900px) {
   .seller-cta { grid-template-columns: 1fr; padding: 40px; }
   .hero-content { max-width: 100%; }

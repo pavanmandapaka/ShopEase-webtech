@@ -20,6 +20,10 @@ export const AuthProvider = ({ children }) => {
   // Prevent multiple simultaneous logout redirects
   const loggingOut = useRef(false);
 
+  const [activeRole, setActiveRole] = useState(() => {
+    return localStorage.getItem('activeRole') || 'user';
+  });
+
   // Verify token on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -42,9 +46,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Listen for 401 events fired by the api interceptor (for non-payment routes).
-  // This replaces the old window.location.href redirect in api.js, giving React
-  // Router control over navigation so no full-page reload occurs mid-checkout.
+  // Listen for 401 events fired by the api interceptor
   useEffect(() => {
     const handleUnauthorized = () => {
       if (loggingOut.current) return;
@@ -67,6 +69,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     setIsAuthenticated(true);
+    setActiveRole('user');
+    localStorage.setItem('activeRole', 'user');
     return data;
   }, []);
 
@@ -76,6 +80,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     setIsAuthenticated(true);
+    setActiveRole('user');
+    localStorage.setItem('activeRole', 'user');
     return data;
   }, []);
 
@@ -85,22 +91,43 @@ export const AuthProvider = ({ children }) => {
     } catch {}
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('activeRole');
     setUser(null);
     setIsAuthenticated(false);
+    setActiveRole('user');
     toast.success('Logged out successfully');
   }, []);
+
+  const switchRole = useCallback((role) => {
+    setActiveRole(role);
+    localStorage.setItem('activeRole', role);
+    toast.success(`Switched to ${role === 'seller' ? 'Seller' : 'Buyer'} mode`);
+    navigate(role === 'seller' ? '/seller/dashboard' : '/');
+  }, [navigate]);
 
   const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
   }, []);
 
-  const isSeller = user?.role === 'seller' || user?.role === 'admin';
+  const isSellerMode = activeRole === 'seller';
   const isAdmin = user?.role === 'admin';
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAuthenticated, login, register, logout, updateUser, isSeller, isAdmin }}
+      value={{ 
+        user, 
+        loading, 
+        isAuthenticated, 
+        activeRole,
+        switchRole,
+        login, 
+        register, 
+        logout, 
+        updateUser, 
+        isSellerMode, 
+        isAdmin 
+      }}
     >
       {children}
     </AuthContext.Provider>
