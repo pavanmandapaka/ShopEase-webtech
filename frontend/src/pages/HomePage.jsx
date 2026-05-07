@@ -73,21 +73,18 @@ const HomePage = () => {
     return (
       <div className="home-page seller-home">
         <section className="hero seller-hero">
-          <div className="hero-bg">
-            <div className="hero-orb hero-orb-1" />
-            <div className="hero-orb hero-orb-3" />
-            <div className="hero-grid-pattern" />
-          </div>
+          <div className="hero-bg" style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.8
+          }} />
           <div className="container hero-content">
-            <div className="hero-badge">
-              <FiAward size={14} /> Seller Mode Active
-            </div>
-            <h1 className="hero-title">
-              Your <span className="gradient-text">Business</span><br />
-              at a glance.
+            <h1 className="hero-title" style={{ color: '#fff', marginTop: 'auto' }}>
+              Effortlessly<br />Selling
             </h1>
-            <p className="hero-subtitle">
-              Manage your products, track orders, and grow your revenue from your personalized seller dashboard.
+            <p className="hero-subtitle" style={{ color: '#fff' }}>
+              Discover quality products with fast shipping and secure checkout.
             </p>
             <div className="hero-actions">
               <Link to="/seller/dashboard" className="btn btn-primary btn-lg">
@@ -168,23 +165,13 @@ const HomePage = () => {
     <div className="home-page">
       {/* ── Hero Section ─────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-bg">
-          <div className="hero-orb hero-orb-1" />
-          <div className="hero-orb hero-orb-2" />
-          <div className="hero-orb hero-orb-3" />
-          <div className="hero-grid-pattern" />
-        </div>
+        <div className="hero-bg" style={{ backgroundColor: 'var(--bg-secondary)' }} />
         <div className="container hero-content">
-          <div className="hero-badge">
-            <FiZap size={14} /> New Season Sale — Up to 70% Off
-          </div>
           <h1 className="hero-title">
-            Shop <span className="gradient-text">Smarter.</span><br />
-            Live <span className="gradient-text">Better.</span>
+            Explore Our Shop
           </h1>
           <p className="hero-subtitle">
-            Discover thousands of premium products from trusted sellers.
-            Secure payments, fast delivery, and a seamless shopping experience.
+            Discover handpicked products made just for you.
           </p>
           <div className="hero-actions">
             <Link to="/products" className="btn btn-primary btn-lg" id="hero-shop-btn">

@@ -1,7 +1,7 @@
 .product-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
   transition: all var(--transition);
   display: flex;
@@ -9,8 +9,6 @@
 }
 
 .product-card:hover {
-  border-color: rgba(108, 99, 255, 0.25);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(108, 99, 255, 0.1);
   transform: translateY(-4px);
 }
 
@@ -23,7 +21,7 @@
 /* Image */
 .product-image-wrapper {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 4/5;
   overflow: hidden;
   background: var(--bg-elevated);
 }
@@ -127,7 +125,7 @@
 
 /* Content */
 .product-content {
-  padding: 16px;
+  padding: 16px 0 8px 0;
   flex: 1;
 }
 
@@ -185,7 +183,7 @@
 
 /* Actions */
 .product-actions {
-  padding: 12px 16px 16px;
+  padding: 0;
 }
 
 .add-cart-btn {
